@@ -2,13 +2,14 @@ from PyQt6.QtCore import Qt
 
 
 NOTE_MAP = {
-    Qt.Key.Key_A: 60,
-    Qt.Key.Key_W: 61,
-    Qt.Key.Key_S: 62,
-    Qt.Key.Key_E: 63,
-    Qt.Key.Key_D: 64,
-    Qt.Key.Key_F: 65,
-    Qt.Key.Key_G: 66,
+    Qt.Key.Key_A: 30,
+    Qt.Key.Key_W: 31,
+    Qt.Key.Key_S: 32,
+    Qt.Key.Key_E: 33,
+    Qt.Key.Key_D: 34,
+    Qt.Key.Key_F: 35,
+    Qt.Key.Key_T: 36,
+    Qt.Key.Key_G: 37,
 }
 
 
