@@ -19,6 +19,7 @@ class KeyboardMixin:
     """
 
     def keyPressEvent(self, event):
+        "Play note on key down"
         if event.isAutoRepeat():
             return
 
@@ -26,6 +27,7 @@ class KeyboardMixin:
             self.on_key_down(NOTE_MAP[event.key()])
 
     def keyReleaseEvent(self, event):
+        "Stop note on key up"
         if event.isAutoRepeat():
             return
 
