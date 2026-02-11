@@ -2,7 +2,6 @@ from signalflow import AudioGraph, ChannelMixer, BufferRecorder, Buffer
 import numpy as np
 
 from dsp.voice import Voice
-from dsp.utils import midi_to_freq
 
 
 class AudioEngine:
@@ -20,20 +19,6 @@ class AudioEngine:
         # Mono buffer for FFT
         self.buffer = Buffer(num_channels=1, num_frames=fft_size * 2)
 
-        # Add ChannelMixer to convert stereo to mono for recording
-        self._update_recorder()
-
-        self.fft_size = fft_size
-
-    def _update_recorder(self):
-        """Actualizes the BufferRecorder with the current voice output"""
-        # Zastavíme starý recorder, pokud existuje
-        if hasattr(self, 'recorder'):
-            try:
-                self.recorder.stop()
-            except:
-                pass
-
         # Create a mono signal by mixing the stereo output of the voice
         mono_signal = ChannelMixer(1, self.voice.output)
 
@@ -44,9 +29,11 @@ class AudioEngine:
         )
         self.recorder.play()
 
-    def note_on(self, note: int):
-        freq = midi_to_freq(note)
-        self.voice.note_on(freq)
+        self.fft_size = fft_size
+
+    def note_on(self, midi_note: int):
+        """Play note with MIDI note number (not frequency)"""
+        self.voice.note_on(midi_note)
 
     def note_off(self):
         self.voice.note_off()

@@ -3,6 +3,7 @@ from signalflow import (
     ADSREnvelope, ChannelArray, Constant
 )
 
+from dsp.voice_tune import Tuner
 
 class Voice:
     def __init__(self):
@@ -10,15 +11,17 @@ class Voice:
                                 sustain=0.8, release=0.2)
         self.amp = Constant(0.1)
 
-        self.current_freq = 440
+        self.tuner = Tuner(base_freq=440.0)
+        self.current_midi_note = 69
+
         self.active = False
         self.is_playing = False
 
         # all oscillator types pre-initialized for realtime switching
-        self.osc_sine = SineOscillator(self.current_freq)
-        self.osc_saw = SawOscillator(self.current_freq)
-        self.osc_square = SquareOscillator(self.current_freq)
-        self.osc_triangle = TriangleOscillator(self.current_freq)
+        self.osc_sine = SineOscillator(self.tuner.get_frequency())
+        self.osc_saw = SawOscillator(self.tuner.get_frequency())
+        self.osc_square = SquareOscillator(self.tuner.get_frequency())
+        self.osc_triangle = TriangleOscillator(self.tuner.get_frequency())
 
         # realtime safe mix control
         self.sel_sine = Constant(1.0)   # sine default
@@ -43,8 +46,9 @@ class Voice:
             self.output.play()
             self.is_playing = True
 
-    def note_on(self, freq):
-        self.current_freq = freq
+    def note_on(self, midi_note):
+        self.current_midi_note = midi_note
+        freq = self.tuner.get_frequency_for_midi(midi_note)
         self.osc_sine.frequency = freq
         self.osc_saw.frequency = freq
         self.osc_square.frequency = freq
@@ -62,3 +66,12 @@ class Voice:
         self.sel_saw.set_value(1.0 if osc_type == "saw" else 0.0)
         self.sel_square.set_value(1.0 if osc_type == "square" else 0.0)
         self.sel_triangle.set_value(1.0 if osc_type == "triangle" else 0.0)
+
+    def update_frequency(self):
+        """Call this after tuner changes to update all oscillator frequencies"""
+        if self.active:  # pokud držíme notu
+            new_freq = self.tuner.get_frequency_for_midi(self.current_midi_note)
+            self.osc_sine.frequency = new_freq
+            self.osc_saw.frequency = new_freq
+            self.osc_square.frequency = new_freq
+            self.osc_triangle.frequency = new_freq
