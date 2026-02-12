@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt
 
 
 
-class ADSRWidget(QWidget):
+class ADSR(QWidget):
     """ADSR envelope parameters"""
 
     def __init__(self, envelope):
@@ -14,7 +14,7 @@ class ADSRWidget(QWidget):
         self.setLayout(layout)
 
         # ADSR label
-        self.label = QLabel(f"ADSR: " 
+        self.label = QLabel(f"ADSR: "
                             f"A={envelope.attack:.2f}s "
                             f"D={envelope.decay:.2f}s "
                             f"S={envelope.sustain:.2f} "

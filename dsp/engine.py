@@ -11,7 +11,7 @@ class AudioEngine:
 
         # Stereo voice
         self.voice = Voice()
-        self.voice.start_playing()
+        self.voice.output.play()
 
         self.sample_rate = self.graph.sample_rate
         self.block_size = 8192

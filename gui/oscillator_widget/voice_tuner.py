@@ -2,31 +2,30 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QDial, QLabel
 from PyQt6.QtCore import Qt
 
 
-class OscillatorWidget(QWidget):
-    def __init__(self, voice, engine):
+class VoiceTuner(QWidget):
+    """
+    QDial widget for semitone tuning.
+    """
+
+    def __init__(self, tuner):
         super().__init__()
-        self.voice = voice
+        self.tuner = tuner
 
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # OSC label
-        self.label = QLabel("sine")
+        self.label = QLabel(f"Tune: {self.tuner.semitone_offset} semitones")
         layout.addWidget(self.label)
 
-        # Knob with 4 positions for selecting oscillator type
         self.dial = QDial()
-        self.dial.setMinimum(0)
-        self.dial.setMaximum(3)
+        self.dial.setMinimum(-24)   # one octave down
+        self.dial.setMaximum(24)    # one octave up
         self.dial.setNotchesVisible(True)
         self.dial.setWrapping(False)
         self.dial.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.dial.valueChanged.connect(self.on_change)
         layout.addWidget(self.dial)
 
-        self.osc_map = {0: "sine", 1: "saw", 2: "square", 3: "triangle"}
-
     def on_change(self, value):
-        osc_type = self.osc_map.get(value, "sine")
-        self.label.setText(osc_type)
-        self.voice.set_oscillator(osc_type)
+        self.tuner.set_semitone_offset(value)
+        self.label.setText(f"Tune: {value} semitones")
