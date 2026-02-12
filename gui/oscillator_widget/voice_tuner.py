@@ -18,8 +18,8 @@ class VoiceTuner(QWidget):
         layout.addWidget(self.label)
 
         self.dial = QDial()
-        self.dial.setMinimum(-24)   # one octave down
-        self.dial.setMaximum(24)    # one octave up
+        self.dial.setMinimum(-36)   # one octave down
+        self.dial.setMaximum(36)    # one octave up
         self.dial.setNotchesVisible(True)
         self.dial.setWrapping(False)
         self.dial.setFocusPolicy(Qt.FocusPolicy.NoFocus)

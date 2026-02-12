@@ -4,6 +4,7 @@ from PyQt6.QtCore import Qt
 from gui.input.keyboard import KeyboardMixin
 from gui.vizualization_window.frequency_spectrum import FrequencySpectrum
 from gui.oscillator_widget.oscillator_widget import OscillatorWidget
+from gui.filter.filter_widget import FilterWidget
 
 
 class MainWindow(QWidget, KeyboardMixin):
@@ -12,7 +13,7 @@ class MainWindow(QWidget, KeyboardMixin):
         self.engine = engine
         self.setWindowTitle("Simple Synth")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.resize(1000, 500)
+        self.resize(1000, 800)
 
         # Main layout - vertical stack
         main_layout = QVBoxLayout()
@@ -25,7 +26,13 @@ class MainWindow(QWidget, KeyboardMixin):
         # Horizontal layout for OSC, tuner
         self.osc1_widget = OscillatorWidget(
             self.engine.voice.layer1, self.engine)
-        main_layout.addWidget(self.osc1_widget)
+
+        # Filter widget
+        self.filter_widget = FilterWidget(self.engine.voice)
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addWidget(self.osc1_widget)
+        bottom_layout.addWidget(self.filter_widget)
+        main_layout.addLayout(bottom_layout)
 
         self.osc2_widget = OscillatorWidget(
             self.engine.voice.layer2, self.engine)
