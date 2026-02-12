@@ -1,14 +1,15 @@
 from signalflow import (
     SineOscillator, SawOscillator, SquareOscillator, TriangleOscillator,
-    ADSREnvelope, ChannelArray, Constant
+    ChannelArray, Constant
 )
 
 from dsp.voice_tune import Tuner
+from dsp.adsr import ADSR
+
 
 class Voice:
     def __init__(self):
-        self.env = ADSREnvelope(attack=0.01, decay=0.1,
-                                sustain=0.8, release=0.2)
+        self.env = ADSR()
         self.amp = Constant(0.1)
 
         self.tuner = Tuner(base_freq=440.0)
@@ -35,7 +36,7 @@ class Voice:
             self.osc_saw * self.sel_saw +
             self.osc_square * self.sel_square +
             self.osc_triangle * self.sel_triangle
-        ) * self.env * self.amp
+        ) * self.env.node * self.amp
 
         # stereo output
         self.stereo = ChannelArray([mono, mono])
@@ -49,15 +50,17 @@ class Voice:
     def note_on(self, midi_note):
         self.current_midi_note = midi_note
         freq = self.tuner.get_frequency_for_midi(midi_note)
+        
         self.osc_sine.frequency = freq
         self.osc_saw.frequency = freq
         self.osc_square.frequency = freq
         self.osc_triangle.frequency = freq
-        self.env.gate = 1
+        
+        self.env.gate_on()
         self.active = True
 
     def note_off(self):
-        self.env.gate = 0
+        self.env.gate_off()
         self.active = False
 
     def set_oscillator(self, osc_type: str):

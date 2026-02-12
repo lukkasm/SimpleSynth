@@ -5,6 +5,7 @@ from gui.keyboard import KeyboardMixin
 from gui.frequency_spectrum import FrequencySpectrum
 from gui.oscillator_widget import OscillatorWidget
 from gui.voice_tune_widget import TunerWidget
+from gui.adsr_widget import ADSRWidget
 
 
 class MainWindow(QWidget, KeyboardMixin):
@@ -34,9 +35,12 @@ class MainWindow(QWidget, KeyboardMixin):
         # Add tuner widget
         self.tuner_widget = TunerWidget(self.engine.voice.tuner)
         bottom_layout.addWidget(self.tuner_widget)
-
         self.tuner_widget.dial.valueChanged.connect(
             lambda _: self.engine.voice.update_frequency())
+
+        # Add ADSR widget
+        self.adsr_widget = ADSRWidget(self.engine.voice.env)
+        bottom_layout.addWidget(self.adsr_widget)
 
 
     # --- key events ---
