@@ -15,7 +15,7 @@ engine = AudioEngine()
 
 app = QApplication(sys.argv)
 window = MainWindow(engine)
-window.show()
+window.show() 
 window.setFocus()
 
 sys.exit(app.exec())

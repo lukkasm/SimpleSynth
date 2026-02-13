@@ -8,120 +8,67 @@ class FrequencySpectrum(QWidget):
     def __init__(self, engine, parent=None):
         super().__init__(parent)
         self.engine = engine
-
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        # Plot with black background
+        # Plot
         self.plot_widget = pg.PlotWidget(title="Frequency Spectrum")
         self.plot_widget.setBackground('k')
         self.layout.addWidget(self.plot_widget)
-
         self.plot_widget.setLabel('left', 'Level', units='dB')
         self.plot_widget.setLabel('bottom', 'Frequency', units='Hz')
 
-        # Logarithmic scale for X-axis
+        # Logarithmic X-axis
         self.plot_widget.setLogMode(x=True, y=False)
-        self.plot_widget.setXRange(np.log10(20), np.log10(20000))
-        self.plot_widget.setYRange(-80, 0)
+        self.plot_widget.enableAutoRange(x=False, y=False)
+        self.plot_widget.setYRange(-120, 0)
 
-        # Bar graph item for spectrum
-        self.bar_item = pg.BarGraphItem(
-            x=[],
-            height=[],
-            width=1,
-            y0=-80,
-            brush=(100, 200, 255, 200)
-        )
-        self.plot_widget.addItem(self.bar_item)
+        # Curve
+        self.curve = self.plot_widget.plot(
+            pen=pg.mkPen((100, 200, 255), width=2))
 
         # Timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_spectrum)
         self.timer.start(50)
 
-        # Custom ticks for frequencies
+        # X-axis ticks (logarithmic)
+        freq_ticks = [20, 30, 40, 60, 80, 120, 200, 300, 500, 800,
+                      1000, 2000, 3000, 4000, 6000, 8000, 12000, 16000, 20000]
         axis = self.plot_widget.getAxis('bottom')
-        freq_labels = [
-            20, 30, 40, 60, 80, 120, 200,
-            300, 500, 800, 1000, 2000, 3000,
-            4000, 6000, 8000, 12000, 16000, 20000
-        ]
-
-        ticks = []
-        for f in freq_labels:
-            if f >= 1000:
-                label = f"{f//1000}k"
-            else:
-                label = str(f)
-            ticks.append((np.log10(f), label))
-
+        ticks = [(np.log10(f), str(f) if f <
+                  1000 else f"{f//1000}k") for f in freq_ticks]
         axis.setTicks([ticks])
+
+        self.prev_db = None
+        self.smoothing = 0.6
 
     def update_spectrum(self):
         fft_vals = self.engine.get_fft_magnitude()
-
         if fft_vals is None or len(fft_vals) < 2:
-            # Když není audio, nic nezobrazujeme
-            self.bar_item.setOpts(x=[], height=[], width=1)
+            self.curve.setData([], [])
             return
 
-        # Convert to dB
-        db = 20 * np.log10(np.maximum(fft_vals, 1e-10))
-
-        # Frequencies corresponding to FFT bins
+        # FFT frekvence
         freqs = np.fft.rfftfreq(self.engine.fft_size,
                                 1.0 / self.engine.sample_rate)
 
-        # Filter frequencies to the range of human hearing
+        # Filtrujeme na slyšitelné frekvence
         mask = (freqs >= 20) & (freqs <= 20000)
         freqs = freqs[mask]
-        db = db[mask]
+        db = 20 * np.log10(np.maximum(fft_vals[mask], 1e-12))
+        db = np.clip(db, -120, 0)
 
-        if len(freqs) == 0:
-            self.bar_item.setOpts(x=[], height=[], width=1)
-            return
+        # Logaritmická interpolace pro husté body
+        log_freqs = np.logspace(np.log10(20), np.log10(20000), 1000)
+        db_interp = np.interp(np.log10(log_freqs), np.log10(freqs), db)
 
-        # Bars at logarithmically spaced frequencies
-        num_bars = 100
-        log_freqs = np.logspace(np.log10(20), np.log10(20000), num_bars)
-        heights = []
-
-        for freq in log_freqs:
-            # Find the closest FFT bin for this frequency
-            idx = np.argmin(np.abs(freqs - freq))
-            heights.append(db[idx])
-
-        heights = np.array(heights)
-
-        # Value threshold for display (e.g., -75 dB)
-        threshold = -75
-        valid_mask = heights > threshold
-
-        if not np.any(valid_mask):
-            # No valid bars to display
-            self.bar_item.setOpts(x=[], height=[], width=1)
-            return
-
-        # Filter out bars below the threshold
-        heights = heights[valid_mask]
-        log_freqs_filtered = log_freqs[valid_mask]
-
-        # For log scale, x values are log10 of frequencies
-        x_vals = np.log10(log_freqs_filtered)
-
-        # Šířka baru v log prostoru
-        if len(x_vals) > 1:
-            widths = np.diff(x_vals) * 0.8
-            widths = np.append(widths, widths[-1])
+        # Smoothing mezi snímky
+        if self.prev_db is None:
+            self.prev_db = db_interp
         else:
-            widths = [0.1]
+            self.prev_db = self.smoothing * self.prev_db + \
+                (1 - self.smoothing) * db_interp
 
-        self.bar_item.setOpts(
-            x=x_vals,
-            # Heights are relative to the threshold, so we shift them up by 80 dB
-            height=heights - (-80),
-            width=np.array(widths),
-            y0=-80,  # Lower bound of the bars
-            brush=(100, 200, 255, 200)
-        )
+        # Posíláme data do grafu v log prostoru
+        self.curve.setData(np.log10(log_freqs), self.prev_db)

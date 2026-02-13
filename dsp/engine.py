@@ -5,7 +5,7 @@ from dsp.voice import Voice
 
 
 class AudioEngine:
-    def __init__(self, fft_size=1024):
+    def __init__(self, fft_size=4096):
         self.graph = AudioGraph()
         self.graph.start()
 
@@ -47,16 +47,15 @@ class AudioEngine:
         if buf.ndim > 1:
             buf = buf[0, :]
 
-        if len(buf) > self.fft_size:
-            buf = buf[:self.fft_size]
-        elif len(buf) < self.fft_size:
+        print("Max value in buffer:", np.max(buf))
+
+        if len(buf) >= self.fft_size:
+            buf = buf[-self.fft_size:]
+        else:
             buf = np.pad(buf, (0, self.fft_size - len(buf)))
 
         window = np.hanning(self.fft_size)
         windowed = buf * window
 
         fft_vals = np.abs(np.fft.rfft(windowed))
-
-        if np.max(fft_vals) > 1e-10:
-            fft_vals = fft_vals / np.max(fft_vals)
         return fft_vals
