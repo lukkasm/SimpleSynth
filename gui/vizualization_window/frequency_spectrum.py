@@ -8,19 +8,20 @@ class FrequencySpectrum(QWidget):
     def __init__(self, engine, parent=None):
         super().__init__(parent)
         self.engine = engine
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
 
         # Plot
         self.plot_widget = pg.PlotWidget(title="Frequency Spectrum")
         self.plot_widget.setBackground('k')
-        self.layout.addWidget(self.plot_widget)
+        self.main_layout.addWidget(self.plot_widget)
         self.plot_widget.setLabel('left', 'Level', units='dB')
         self.plot_widget.setLabel('bottom', 'Frequency', units='Hz')
 
-        # Logarithmic X-axis
-        self.plot_widget.setLogMode(x=True, y=False)
+        # Log X-axis handled manually (data is already in log10 space)
+        self.plot_widget.setLogMode(x=False, y=False)
         self.plot_widget.enableAutoRange(x=False, y=False)
+        self.plot_widget.setXRange(np.log10(20), np.log10(20000))
         self.plot_widget.setYRange(-120, 0)
 
         # Curve

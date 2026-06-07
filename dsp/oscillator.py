@@ -33,15 +33,12 @@ class OscillatorLayer:
         self.sel_triangle = Constant(0.0)
 
         # oscillator mix
-        osc_mix = (
+        self.output = (
             self.osc_sine * self.sel_sine +
             self.osc_saw * self.sel_saw +
             self.osc_square * self.sel_square +
             self.osc_triangle * self.sel_triangle
         ) * self.env.node * self.amp
-
-        # stereo output
-        self.output = osc_mix * self.env.node * self.amp
 
     # -------------------------
 

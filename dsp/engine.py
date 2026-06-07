@@ -47,8 +47,6 @@ class AudioEngine:
         if buf.ndim > 1:
             buf = buf[0, :]
 
-        print("Max value in buffer:", np.max(buf))
-
         if len(buf) >= self.fft_size:
             buf = buf[-self.fft_size:]
         else:
